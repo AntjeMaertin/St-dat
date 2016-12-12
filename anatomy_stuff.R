@@ -78,7 +78,70 @@ plot(as.numeric(as.vector(dat1[,1])), as.numeric(as.vector(dat1[,2])), cex=3, yl
 text(as.numeric(as.vector(dat1[,1])), as.numeric(as.vector(dat1[,2])), labels=row.names(dat1), cex=0.5)
 points(as.numeric(as.vector(dat1.adj[,1])), as.numeric(as.vector(dat1.adj[,2])), cex=3, pch=21, bg='red')
 
-plot(dataset$x, dataset$y, bg=dataset$color, pch=21)
+
+
+Min <- pmin(dataset2$x, dataset2$y) 
+Max <- pmax(dataset2$x, dataset2$y) 
+
+
+corner <- Min != Max 
+
+quartz()
+plot(dataset2$x, dataset2$y, bg=dataset2$color, pch=21, ylim=c(regi$transformationgrid$height,0), xlim=c(0,regi$transformationgrid$width), asp=1)
+library(geometry)
+MBR <- function(points) {
+    tryCatch({
+        a2 <- geometry::convhulln(points, options = 'FA')
+
+        e <- points[a2$hull[,2],] - points[a2$hull[,1],]            # Edge directions
+        norms <- apply(e, 1, function(x) sqrt(x %*% x)) # Edge lengths
+
+        v <- diag(1/norms) %*% as.matrix(e)                        # Unit edge directions
+
+
+        w <- cbind(-v[,2], v[,1])                       # Normal directions to the edges
+
+        # Find the MBR
+        vertices <- as.matrix((points) [a2$hull, 1:2])    # Convex hull vertices
+        minmax <- function(x) c(min(x), max(x))         # Computes min and max
+        x <- apply(vertices %*% t(v), 2, minmax)        # Extremes along edges
+        y <- apply(vertices %*% t(w), 2, minmax)        # Extremes normal to edges
+        areas <- (y[1,]-y[2,])*(x[1,]-x[2,])            # Areas
+        k <- which.min(areas)                           # Index of the best edge (smallest area)
+
+        # Form a rectangle from the extremes of the best edge
+        as.data.frame(cbind(x[c(1,2,2,1,1),k], y[c(1,1,2,2,1),k]) %*% rbind(v[k,], w[k,]))
+    }, error = function(e) {
+        assign('points', points, .GlobalEnv)
+        stop(e)  
+    })
+}
+
+
+
+array.corners<-MBR(cbind(dataset2$x, dataset2$y))
+
+xcoord<-seq(array.corners[1,1], array.corners[4,1], length.out=35)
+ycoord<-seq(array.corners[1,2], array.corners[2,2], length.out=33)
+
+ycoord<-rep(ycoord, 35)
+xcoord <-rep(xcoord, 33)
+
+indexX<-rep(1:35, 33)
+
+indexY<-rep(1:33, 35)
+
+points(xcoord, ycoord, col='red')
+text(xcoord, ycoord, labels=paste(indexX, indexY, sep='x'), cex=0.5)
+
+distance<-sqrt( (array.corners[1,1]-dataset2$x)^2 + (array.corners[1,2]-dataset2$y)^2 )
+corner <-which.min(distance)
+
+points(dataset2$x[corner], dataset2$y[corner], pch=16, col='pink')
+
+quartz()
+plot(as.numeric(as.vector(dat1[,1])), as.numeric(as.vector(dat1[,2])), cex=1, ylim=c(32, 2), xlim=c(34,2))
+points(as.numeric(as.vector(dat1.adj[,1])), as.numeric(as.vector(dat1.adj[,2])), cex=1, pch=21, bg='red')
 
 
 names(dat1)[3:ncol(dat1)]%in%
