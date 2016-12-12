@@ -1,5 +1,5 @@
 
-
+#load file
 read.ST<-function(filepath='adjusted_stdata.tsv'){
 dat<-read.table(filepath, sep='\t', header=TRUE, row.names=1)
 
