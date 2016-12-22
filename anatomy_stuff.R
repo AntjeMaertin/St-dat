@@ -15,12 +15,18 @@ library(wholebrain)
 
 #wholebrain package
 dataset<-inspect.registration(regi,features, forward.warps=TRUE)
+dataset<-dataset[-c(which.min(dataset$y), which.max(dataset$y)),]
+
 regi1<-regi
 
 array.corners<-MBR(cbind(dataset$x, dataset$y))
 
-xcoord<-seq(array.corners[1,1], array.corners[4,1], length.out=35)
-ycoord<-seq(array.corners[1,2], array.corners[2,2], length.out=33)
+plot(dataset$x, dataset$y, bg=dataset$color, pch=21, ylim=c(regi$transformationgrid$height,0), xlim=c(0,regi$transformationgrid$width), asp=1)
+points(array.corners[,1], array.corners[,2], pch=16, col='pink')
+text(array.corners[,1], array.corners[,2], 1:nrow(array.corners), cex=0.7)
+
+xcoord<-seq(array.corners[2,1], array.corners[1,1], length.out=35)
+ycoord<-seq(array.corners[2,2], array.corners[3,2], length.out=33)
 
 ycoord<-rep(ycoord, 35)
 xcoord <-rep(xcoord, 33)
@@ -144,22 +150,16 @@ return(data)
 plot(as.numeric(dat1[,1]), as.numeric(dat1[,2]))
 
 dat1<-read.ST('~/GitHub/St-dat/Sequencing_reads/E1_ID3_S3_stdata.tsv')
+
+dat.adj<-read.ST('~/GitHub/St-dat/Sequencing_reads/E1_ID3_S3_stdata_adj.csv')
+data1<-dat.adj
+#data2<-symbolize(dat1.adj)
+data1$ID<-paste(round(data1$x), round(data1$y), sep='x')
+
 dat1.adj<-read.ST('~/GitHub/St-dat/Sequencing_reads/E2_ID3_S3_stdata_adj.csv')
-
-#remove cromosome
-new.names<-sapply(strsplit(names(dat1.adj)[3:ncol(dat1.adj)], '[.]'), '[', 1)
-
-dat1.adj<-dat1.adj[,-(which(!(new.names%in%grcm38$ensgene))+2)]
-
-new.names<-sapply(strsplit(names(dat1.adj)[3:ncol(dat1.adj)], '[.]'), '[', 1)
-
-#replace with symbol
-new.names<-grcm38$symbol[which(grcm38$ensgene%in%new.names)]
-
-dat1.adj<-dat1.adj[, -which(duplicated(new.names))]
-names(dat1.adj)[3:ncol(dat1.adj)]<-new.names[-which(duplicated(new.names))]
-
-names(dat1.adj)[3:ncol(dat1.adj)]<-new.names
+data2<-dat1.adj
+#data2<-symbolize(dat1.adj)
+data2$ID<-paste(round(data2$x), round(data2$y), sep='x')
 
 dat2<-read.ST('~/GitHub/St-dat/Sequencing_reads/E2_ID3_S3_stdata.tsv')
 
@@ -180,6 +180,8 @@ plot.gene<-function(gene.id='ENSMUSG00000004151.16'){
    	plot(dat1.adj$x, dat1.adj$y, col=gray(1-dat1.adj[,which(names(dat1.adj)== gene.id)]/max.gene), pch=16)
    	points(dat1.adj$x, dat1.adj$y)
 }
+
+plot.gene('ENSMUSG00000021478.5')
 
 corner <- Min != Max 
 
@@ -219,6 +221,9 @@ plot(dataset2$x, dataset2$y, bg=dataset2$color, pch=21, ylim=c(regi$transformati
 
 
 array.corners<-MBR(cbind(dataset2$x, dataset2$y))
+points(array.corners, pch=16, col='pink')
+text(array.corners[,1], array.corners[,2], 1:nrow(array.corners))
+
 
 xcoord<-seq(array.corners[1,1], array.corners[4,1], length.out=35)
 ycoord<-seq(array.corners[1,2], array.corners[2,2], length.out=33)
